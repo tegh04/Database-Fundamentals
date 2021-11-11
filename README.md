@@ -5,6 +5,6 @@ Team Members:
 -Tristam Fryer
 -Choong YC
 
-Created an EER (Enchnced Entity Relationship Diagram) modelling a hypothetical database for Woolworths.
-
-Constructed PostgreSQL query to get data.  
+## Tasks
+- Created an EER (Enchnced Entity Relationship Diagram) modelling a hypothetical database for Woolworths.
+- Constructed PostgreSQL query to get data.  

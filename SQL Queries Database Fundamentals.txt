@@ -1,0 +1,156 @@
+/* (Database Fundamentals, Assignment Part D, Spring 2020 */
+/* First author's name: Tegh Singh */
+/* First author's email: tegh.b.singh@uts.student.edu.au*/
+/* Second author's name: Tristram Fryer */
+/* Second author's email: tristram.r.fryer@uts.student.edu.au*/
+/* Third author's name: Yi Chun Choong */
+/* Third author's email: yichun.choong@uts.student.edu.au*/
+/* script name:    .SQL */
+/* purpose:     Builds PostgreSQL tables for Online Grocery Shop database */
+/* date:        01 Oct 2020 */
+/* The URL for the website related to this database is https://www.woolworths.com.au */
+
+-- ============================================================
+
+
+DROP TABLE IF EXISTS Order_T CASCADE  ;
+DROP TABLE IF EXISTS Order_Product_T ;
+DROP TABLE IF EXISTS Product_T ;
+
+-- ===============================================================
+
+-- Creating and Insert into tables
+
+CREATE TABLE Order_T (
+    Order_Number      NUMERIC(5) NOT NULL,
+    Order_Time        TIME     NOT NULL,
+    Order_Date        DATE     NOT NULL,
+    Order_Total_Cost        NUMERIC(10,2)    NOT NULL,
+    Order_Type    CHAR    NOT NULL,   
+    Order_Bill_StreetNo    VARCHAR(10)    NOT NULL,
+    Order_Bill_Street    VARCHAR(30)    NOT NULL,
+    Order_Bill_Suburb    VARCHAR(20)    NOT NULL,
+    Order_Bill_State    VARCHAR(3)    NOT NULL,
+
+
+    CONSTRAINT Order_PK PRIMARY KEY (Order_Number)
+);
+
+INSERT INTO Order_T VALUES
+(00001, '10:20 am', '09/28/2020', '30.00', 'P', '120-155', 'George St', 'Haymarket', 'NSW');
+INSERT INTO Order_T VALUES
+(00002, '9:10 pm', '12/31/2020', '123.56', 'P', '70', 'Grey St', 'St Kilda', 'VIC');
+INSERT INTO Order_T VALUES
+(00003, '11:59 pm', '01/01/2020', '30.20', 'D', '1', 'Broadway St', 'Ultimo', 'NSW');
+INSERT INTO Order_T VALUES
+(00004, '4:20 am', '05/07/2020', '250.75', 'D', '507-514', 'King St', 'Newtown', 'NSW');
+INSERT INTO Order_T VALUES
+(00005, '5:37 pm', '07/22/2020', '48.96', 'P', '240', 'Scarborough Rd', 'Scarborough', 'QLD');
+
+-- ======
+-- ======
+
+CREATE TABLE Product_T(
+    Product_ID    NUMERIC(6)    PRIMARY KEY,
+    Product_Name        VARCHAR(30)     NOT NULL,
+    Product_Category    VARCHAR(20)     NOT NULL,
+    Product_Current_Price    NUMERIC(10,2)    NOT NULL
+    
+);
+
+INSERT INTO Product_T VALUES
+(000011, 'Avocado', 'Fruit&Vegetables', '4.50');
+INSERT INTO Product_T VALUES
+(000012, 'Spinach', 'Fruit&Vegetables', '3.99');
+INSERT INTO Product_T VALUES
+(000013, 'Detergent', 'Household', '13.25');
+INSERT INTO Product_T VALUES
+(000014, 'Golden Gaytime', 'Freezer', '9.99');
+INSERT INTO Product_T VALUES
+(000015, 'Smirnoff Vodka', 'Liquor', '40.00');
+
+-- ======
+-- ======
+
+CREATE TABLE Order_Product_T(
+    Order_Product_Amount    NUMERIC(3),
+    Order_Number    NUMERIC(5)    NOT NULL,
+    Product_ID    NUMERIC(6)    NOT NULL,
+CONSTRAINT Order_Product_FK1 FOREIGN KEY (Order_Number) REFERENCES Order_T (Order_Number),
+CONSTRAINT Order_Product_FK2 FOREIGN KEY (Product_ID) REFERENCES Product_T (Product_ID),
+CONSTRAINT Order_Product_PK PRIMARY KEY (Order_Number, Product_ID)
+);
+
+INSERT INTO Order_Product_T VALUES
+(020, 00001, 000012);
+INSERT INTO Order_Product_T VALUES
+(002, 00005, 000012);
+INSERT INTO Order_Product_T VALUES
+(001, 00004, 000015);
+INSERT INTO Order_Product_T VALUES
+(005, 00002, 000013);
+INSERT INTO Order_Product_T VALUES
+(099, 00003, 000014);
+INSERT INTO Order_Product_T VALUES
+(004, 00003, 000015);
+INSERT INTO Order_Product_T VALUES
+(007, 00001, 000013);
+INSERT INTO Order_Product_T VALUES
+(010, 00005, 000011);
+INSERT INTO Order_Product_T VALUES
+(008, 00002, 000011);
+INSERT INTO Order_Product_T VALUES
+(013, 00004, 000014);
+
+
+--=================================================================================================
+-- 3.a three select statements of the tables
+-- 3.a.1 Question: Get all information of orders stored in the database
+-- selecting from order table
+select * from order_t;
+
+-- 3.a.2 Question: Get all information of products stored in the database
+-- selecting from product table
+select * from product_t;
+
+
+-- 3.a.3 Question: Get all information of product orders stored in the database
+-- selecting from order_product associative table
+select * from Order_Product_T;
+
+
+--=================================================================================================
+-- this involves 'group by'
+-- 3.b: Question: How many orders are there for each product and, what are the product IDs for each product?
+-- 3.b: SELECT statement:
+
+select Product_Name, Product_ID, 
+(select count(*)
+from Order_Product_T
+group by Product_ID
+having Product_ID=p.Product_ID) as orders
+from product_t p;
+
+
+-- =====================================
+-- this involves inner join
+-- 3.c: Question: What are product ids, product names, order numbers and 
+--                  order dates for product category "Fruit&Vegetables"
+-- 3.c: SELECT statement:
+
+select p.Product_ID, Product_Name, o.Order_Number, o.Order_Date
+from Order_T o inner join Order_Product_T op ON o.Order_Number = op.Order_Number
+               inner join Product_T p ON p.Product_ID = op.Product_ID
+where Product_Category = 'Fruit&Vegetables';
+
+
+--==========================================
+-- this involves subquery
+-- 3.d: Question: What orders occur in the same state as order 1?
+-- 3.d: SELECT statement:
+
+select o1.Order_Number
+from Order_t o1
+where o1.Order_Bill_State = (select o2.Order_Bill_State from order_t o2 where o2.Order_Bill_State='NSW'
+and o2.Order_Number = 1) and 
+o1.Order_Number!= 1;
